@@ -25,7 +25,11 @@ const AddContact = () => {
     if (isEdit) {
       const contact = store.contacts.find((c) => String(c.id) === id);
       if (contact) {
-        setForm(contact);
+        setForm({
+          ...contact,
+          full_name: contact.full_name || contact.name || "", // <-- aquí el cambio clave
+          image: contact.image || getRandomMaleImage()
+        });
       }
     }
   }, [id, isEdit, store.contacts]);
