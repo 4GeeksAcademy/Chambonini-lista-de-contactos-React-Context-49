@@ -6,10 +6,41 @@ import { Link } from "react-router-dom";
 const Contacts = () => {
   const { store, dispatch } = useContext(Context);
 
-  // Cargar contactos desde la API
+  // 1. Crear agenda automáticamente si no existe
+  useEffect(() => {
+    const ensureAgendaExists = async () => {
+      try {
+        const resp = await fetch(
+          "https://playground.4geeks.com/contact/agendas/agenda_contactos",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        );
+
+        if (!resp.ok && resp.status !== 409) {
+          // 409 = agenda ya existe, cualquier otro error es relevante
+          throw new Error("No se pudo crear la agenda");
+        }
+
+        // Una vez creada (o si ya existe), llamar al GET
+        fetchContactsFromAPI();
+      } catch (error) {
+        console.error("Error al crear agenda:", error);
+      }
+    };
+
+    ensureAgendaExists();
+  }, [dispatch]);
+
+  // 2. Obtener contactos de la API
   const fetchContactsFromAPI = async () => {
     try {
-      const resp = await fetch("https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts");
+      const resp = await fetch(
+        "https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts"
+      );
 
       if (!resp.ok) throw new Error("Error al obtener contactos desde la API");
 
@@ -26,49 +57,57 @@ const Contacts = () => {
     }
   };
 
-  // Subir contactos locales que aún no están en la API
-  const syncNewContacts = async () => {
-    const localContacts = JSON.parse(localStorage.getItem("local_contacts")) || [];
+  // 3. Sincronizar contactos locales con la API si tienen ID local
+  useEffect(() => {
+    const syncNewContacts = async () => {
+      const localStorageKey = "local_contacts";
+      let localContacts = JSON.parse(localStorage.getItem(localStorageKey)) || [];
 
-    for (const contact of localContacts) {
-      const isLocalOnly = !contact.id || String(contact.id).length >= 13;
+      for (const contact of store.contacts) {
+        const isLocalOnly = typeof contact.id !== "number" || String(contact.id).length >= 13;
 
-      if (isLocalOnly) {
-        try {
-          const resp = await fetch("https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              full_name: contact.full_name,
-              email: contact.email,
-              phone: contact.phone,
-              address: contact.address,
-              agenda_slug: "agenda_contactos"
-            })
-          });
+        if (isLocalOnly) {
+          try {
+            const resp = await fetch(
+              "https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name: contact.full_name,
+                  phone: contact.phone,
+                  email: contact.email,
+                  address: contact.address
+                })
+              }
+            );
 
-          if (!resp.ok) throw new Error("Error al subir contacto");
+            if (!resp.ok) throw new Error("Error al subir contacto");
 
-          // El contacto ya fue subido, eliminamos el local duplicado
-          const newLocalContacts = localContacts.filter(c => c.id !== contact.id);
-          localStorage.setItem("local_contacts", JSON.stringify(newLocalContacts));
+            const data = await resp.json();
 
-          // Vuelve a cargar desde la API
-          await fetchContactsFromAPI();
-        } catch (error) {
-          console.error("Error al sincronizar contacto:", error);
+            const updatedContacts = store.contacts.map((c) =>
+              c.id === contact.id ? data : c
+            );
+
+            dispatch({
+              type: "SET_CONTACTS",
+              payload: updatedContacts
+            });
+
+            localContacts = localContacts.map((c) =>
+              c.id === contact.id ? data : c
+            );
+            localStorage.setItem(localStorageKey, JSON.stringify(localContacts));
+          } catch (error) {
+            console.error("Error al sincronizar contacto:", error);
+          }
         }
       }
-    }
-  };
+    };
 
-  useEffect(() => {
-    fetchContactsFromAPI();
-  }, []);
-
-  useEffect(() => {
     syncNewContacts();
-  }, [store.contacts]);
+  }, [store.contacts, dispatch]);
 
   return (
     <div className="container mt-5">
