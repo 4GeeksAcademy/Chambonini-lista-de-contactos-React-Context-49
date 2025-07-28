@@ -55,7 +55,7 @@ const AddContact = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">{isEdit ? "Edit Contact" : "Add Contact"}</h2>
+      <h2 className="mb-4 text-center">{isEdit ? "Edit Contact" : "Add a new contact"}</h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">Full Name</label>
@@ -64,7 +64,7 @@ const AddContact = () => {
             value={form.full_name}
             onChange={handleChange}
             className="form-control"
-            placeholder="Enter full name"
+            placeholder="Full name"
             required
           />
         </div>
@@ -87,7 +87,7 @@ const AddContact = () => {
             value={form.phone}
             onChange={handleChange}
             className="form-control"
-            placeholder="Enter phone number"
+            placeholder="Enter phone"
             required
           />
         </div>
@@ -103,10 +103,10 @@ const AddContact = () => {
           />
         </div>
         <button className="btn btn-primary w-100">
-          {isEdit ? "Update Contact" : "Save Contact"}
+          {isEdit ? "Update Contact" : "save"}
         </button>
 
-        <div className="mt-3 text-center">
+        <div className="mt-3 text-start">
           <Link to="/">or get back to contacts</Link>
         </div>
       </form>

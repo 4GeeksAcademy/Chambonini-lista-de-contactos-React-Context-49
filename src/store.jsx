@@ -36,7 +36,8 @@ export const StoreProvider = ({ children }) => {
     try {
       const res = await fetch("https://playground.4geeks.com/contact/agendas/agenda_contactos", {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: "agenda_contactos" }) // ✅ Este es el único cambio agregado
       });
 
       if (res.ok || res.status === 409) {
