@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 const Contacts = () => {
   const { store, dispatch } = useContext(Context);
 
-  // 1. Crear agenda automáticamente si no existe
   useEffect(() => {
     const ensureAgendaExists = async () => {
       try {
@@ -20,29 +19,32 @@ const Contacts = () => {
           }
         );
 
-        if (!resp.ok && resp.status !== 409) {
-          // 409 = agenda ya existe, cualquier otro error es relevante
-          throw new Error("No se pudo crear la agenda");
+        const resText = await resp.text();
+
+        if (
+          resp.ok ||
+          (resp.status === 400 && resText.includes("already exists")) ||
+          (resp.status === 500 && resText.includes("agenda already exists"))
+        ) {
+          // Silenciado: agenda creada o ya existe
         }
 
-        // Una vez creada (o si ya existe), llamar al GET
         fetchContactsFromAPI();
       } catch (error) {
-        console.error("Error al crear agenda:", error);
+        // Silenciado: no se muestra ningún error
       }
     };
 
     ensureAgendaExists();
   }, [dispatch]);
 
-  // 2. Obtener contactos de la API
   const fetchContactsFromAPI = async () => {
     try {
       const resp = await fetch(
         "https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts"
       );
 
-      if (!resp.ok) throw new Error("Error al obtener contactos desde la API");
+      if (!resp.ok) return;
 
       const data = await resp.json();
 
@@ -53,11 +55,10 @@ const Contacts = () => {
 
       localStorage.setItem("local_contacts", JSON.stringify(data.contacts));
     } catch (error) {
-      console.error("Error al cargar contactos desde la API:", error);
+      // Silenciado: no se muestra error de carga
     }
   };
 
-  // 3. Sincronizar contactos locales con la API si tienen ID local
   useEffect(() => {
     const syncNewContacts = async () => {
       const localStorageKey = "local_contacts";
@@ -82,7 +83,7 @@ const Contacts = () => {
               }
             );
 
-            if (!resp.ok) throw new Error("Error al subir contacto");
+            if (!resp.ok) continue;
 
             const data = await resp.json();
 
@@ -100,7 +101,7 @@ const Contacts = () => {
             );
             localStorage.setItem(localStorageKey, JSON.stringify(localContacts));
           } catch (error) {
-            console.error("Error al sincronizar contacto:", error);
+            // Silenciado
           }
         }
       }
@@ -117,6 +118,7 @@ const Contacts = () => {
           Add new contact
         </Link>
       </div>
+
       {store.contacts.map((contact) => (
         <ContactCard key={contact.id} contact={contact} />
       ))}
