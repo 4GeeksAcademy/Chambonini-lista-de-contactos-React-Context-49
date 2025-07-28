@@ -11,7 +11,7 @@ export const router = createBrowserRouter(
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
       <Route index element={<Contacts />} />
       <Route path="add-contact" element={<AddContact />} />
-      <Route path="edit/:id" element={<AddContact />} /> {/* ✅ Ruta agregada para edición */}
+      <Route path="edit/:id" element={<AddContact />} /> 
       <Route path="edit-local/:id" element={<AddContact />} />
       <Route path="single/:theId" element={<Single />} />
       <Route path="demo" element={<Demo />} />

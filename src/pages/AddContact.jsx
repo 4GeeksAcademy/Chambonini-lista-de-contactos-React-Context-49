@@ -27,7 +27,7 @@ const AddContact = () => {
       if (contact) {
         setForm({
           ...contact,
-          full_name: contact.full_name || contact.name || "", // <-- aquí el cambio clave
+          full_name: contact.full_name || contact.name || "", 
           image: contact.image || getRandomMaleImage()
         });
       }

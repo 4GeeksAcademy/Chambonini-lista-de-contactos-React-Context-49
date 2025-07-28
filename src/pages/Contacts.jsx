@@ -26,12 +26,10 @@ const Contacts = () => {
           (resp.status === 400 && resText.includes("already exists")) ||
           (resp.status === 500 && resText.includes("agenda already exists"))
         ) {
-          // Silenciado: agenda creada o ya existe
         }
 
         fetchContactsFromAPI();
       } catch (error) {
-        // Silenciado: no se muestra ningún error
       }
     };
 
@@ -55,7 +53,6 @@ const Contacts = () => {
 
       localStorage.setItem("local_contacts", JSON.stringify(data.contacts));
     } catch (error) {
-      // Silenciado: no se muestra error de carga
     }
   };
 
