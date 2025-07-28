@@ -34,32 +34,29 @@ export const StoreProvider = ({ children }) => {
 
   const initializeAgenda = async () => {
     try {
-      const res = await fetch("https://playground.4geeks.com/contact/agendas/agenda_contactos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: "agenda_contactos" }) // ✅ Este es el único cambio agregado
-      });
+      // Verificar si la agenda existe primero
+      const check = await fetch("https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts");
+      if (check.status === 200) return; // Ya existe, salir sin error
 
-      if (res.ok || res.status === 409) {
-        console.log("Agenda creada o ya existía");
-      } else {
-        const error = await res.json();
-        console.error("Error creando agenda:", error);
-      }
-    } catch (err) {
-      console.error("Error de red al crear agenda:", err);
+      // Si no existe, intentar crearla
+      await fetch("https://playground.4geeks.com/contact/agendas/agenda_contactos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (_) {
+      // Silenciar errores completamente
     }
   };
 
   const loadContacts = async () => {
     try {
       const res = await fetch("https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts");
-      if (!res.ok) throw new Error("Error al cargar contactos");
+      if (!res.ok) return;
 
       const data = await res.json();
       dispatch({ type: "SET_CONTACTS", payload: data });
-    } catch (error) {
-      console.error("Error al cargar contactos:", error);
+    } catch (_) {
+      // Silenciar errores
     }
   };
 
@@ -79,12 +76,12 @@ export const StoreProvider = ({ children }) => {
         }
       );
 
-      if (!resp.ok) throw new Error("Error al agregar contacto");
+      if (!resp.ok) return;
 
       const data = await resp.json();
       dispatch({ type: "ADD_CONTACT", payload: data });
-    } catch (error) {
-      console.error("Error al agregar contacto:", error);
+    } catch (_) {
+      // Silenciar errores
     }
   };
 
@@ -97,11 +94,11 @@ export const StoreProvider = ({ children }) => {
         }
       );
 
-      if (!resp.ok) throw new Error("Error al eliminar contacto");
+      if (!resp.ok) return;
 
       dispatch({ type: "DELETE_CONTACT", payload: id });
-    } catch (error) {
-      console.error("Error al eliminar contacto:", error);
+    } catch (_) {
+      // Silenciar errores
     }
   };
 
@@ -121,12 +118,12 @@ export const StoreProvider = ({ children }) => {
         }
       );
 
-      if (!resp.ok) throw new Error("Error al editar contacto");
+      if (!resp.ok) return;
 
       const data = await resp.json();
       dispatch({ type: "EDIT_CONTACT", payload: data });
-    } catch (error) {
-      console.error("Error al editar contacto:", error);
+    } catch (_) {
+      // Silenciar errores
     }
   };
 

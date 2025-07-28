@@ -1,10 +1,13 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import ContactCard from "../components/ContactCard";
 import { Context } from "../store";
 import { Link } from "react-router-dom";
+import { Modal, Button } from "react-bootstrap";
 
 const Contacts = () => {
   const { store, dispatch } = useContext(Context);
+  const [showModal, setShowModal] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState(null);
 
   useEffect(() => {
     const ensureAgendaExists = async () => {
@@ -107,6 +110,37 @@ const Contacts = () => {
     syncNewContacts();
   }, [store.contacts, dispatch]);
 
+  const handleDeleteClick = (contact) => {
+    setContactToDelete(contact);
+    setShowModal(true);
+  };
+
+  const confirmDelete = async () => {
+    setShowModal(false);
+    if (!contactToDelete) return;
+
+    try {
+      const resp = await fetch(
+        `https://playground.4geeks.com/contact/agendas/agenda_contactos/contacts/${contactToDelete.id}`,
+        {
+          method: "DELETE"
+        }
+      );
+
+      if (resp.ok) {
+        dispatch({ type: "DELETE_CONTACT", payload: contactToDelete.id });
+
+        const localContacts = JSON.parse(localStorage.getItem("local_contacts")) || [];
+        const updatedLocal = localContacts.filter(c => c.id !== contactToDelete.id);
+        localStorage.setItem("local_contacts", JSON.stringify(updatedLocal));
+      }
+    } catch (error) {
+      // Silenciado
+    }
+
+    setContactToDelete(null);
+  };
+
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -117,8 +151,29 @@ const Contacts = () => {
       </div>
 
       {store.contacts.map((contact) => (
-        <ContactCard key={contact.id} contact={contact} />
+        <ContactCard
+          key={contact.id}
+          contact={contact}
+          onDelete={() => handleDeleteClick(contact)}
+        />
       ))}
+
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Are you sure?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          If you delete this thing the entire universe will go down!
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Oh no!
+          </Button>
+          <Button variant="primary" onClick={confirmDelete}>
+            Yes baby!
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
